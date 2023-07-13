@@ -27,7 +27,6 @@ export class PaneSeparator implements IDestroyable {
 	private _mouseActive: boolean = false;
 
 	public constructor(chartWidget: ChartWidget, topPaneIndex: number, bottomPaneIndex: number, disableResize: boolean) {
-		alert("hello")
 		this._chartWidget = chartWidget;
 		this._paneA = chartWidget.paneWidgets()[topPaneIndex];
 		this._paneB = chartWidget.paneWidgets()[bottomPaneIndex];
@@ -45,11 +44,9 @@ export class PaneSeparator implements IDestroyable {
 		this._rowElement.appendChild(this._cell);
 
 		if (disableResize) {
-			alert("dum dum")
 			this._handle = null;
 			this._mouseEventHandler = null;
 		} else {
-			alert("good good")
 			this._handle = document.createElement('div');
 			this._handle.style.position = 'absolute';
 			this._handle.style.zIndex = '50';
@@ -119,21 +116,18 @@ export class PaneSeparator implements IDestroyable {
 	}
 
 	private _mouseOverEvent(event: TouchMouseEvent): void {
-		console.log("mouseOverEvent ")
 		if (this._handle !== null) {
 			this._handle.style.backgroundColor = 'hsla(225,8%,72%,.2)';
 		}
 	}
 
 	private _mouseLeaveEvent(event: TouchMouseEvent): void {
-		console.log("mouseLeaveEvent ")
 		if (this._handle !== null && !this._mouseActive) {
 			this._handle.style.backgroundColor = '';
 		}
 	}
 
 	private _mouseDownEvent(event: TouchMouseEvent): void {
-		console.log("mouseDownEvent ")
 		this._startY = event.pageY;
 		this._deltaY = 0;
 		this._totalHeight = this._paneA.getSize().height + this._paneB.getSize().height;
@@ -145,7 +139,6 @@ export class PaneSeparator implements IDestroyable {
 	}
 
 	private _pressedMouseMoveEvent(event: TouchMouseEvent): void {
-		console.log("pressed Mouse Event ")
 		this._deltaY = (event.pageY - this._startY);
 		const upperHeight = this._paneA.getSize().height;
 		const newUpperPaneHeight = clamp(upperHeight + this._deltaY, this._minPaneHeight, this._maxPaneHeight);
@@ -164,7 +157,6 @@ export class PaneSeparator implements IDestroyable {
 	}
 
 	private _mouseUpEvent(event: TouchMouseEvent): void {
-		console.log("mouseUpEvent ")
 		this._startY = 0;
 		this._deltaY = 0;
 		this._totalHeight = 0;
