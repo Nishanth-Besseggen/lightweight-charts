@@ -277,7 +277,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	public pressedMouseMoveEvent(event: MouseEventHandlerMouseEvent): void {
 		this._onMouseEvent();
 		this._drawSketch(event.localX, event.localY);
-		this._pressedMouseTouchMoveEvent(event);
+		//this._pressedMouseTouchMoveEvent(event);
 		this._setCrosshairPosition(event.localX, event.localY, event);
 	}
 
