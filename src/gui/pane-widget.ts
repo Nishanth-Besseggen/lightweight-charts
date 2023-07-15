@@ -34,7 +34,7 @@ import { MouseEventHandler, MouseEventHandlerEventBase, MouseEventHandlerMouseEv
 import { hitTestPane, HitTestResult } from './pane-hit-test';
 import { PriceAxisWidget, PriceAxisWidgetSide } from './price-axis-widget';
 import { SketchData } from '../renderers/sketch-renderer';
-import { drawLine, LineStyle, setLineStyle } from '../renderers/draw-line';
+import { drawLine, LineStyle} from '../renderers/draw-line';
 
 const enum KineticScrollConstants {
 	MinScrollSpeed = 0.2,
