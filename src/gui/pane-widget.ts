@@ -33,6 +33,8 @@ import { IPaneViewsGetter } from './ipane-view-getter';
 import { MouseEventHandler, MouseEventHandlerEventBase, MouseEventHandlerMouseEvent, MouseEventHandlers, MouseEventHandlerTouchEvent, Position, TouchMouseEvent } from './mouse-event-handler';
 import { hitTestPane, HitTestResult } from './pane-hit-test';
 import { PriceAxisWidget, PriceAxisWidgetSide } from './price-axis-widget';
+import { SketchData } from '../renderers/sketch-renderer';
+import { drawLine, LineStyle, setLineStyle } from '../renderers/draw-line';
 
 const enum KineticScrollConstants {
 	MinScrollSpeed = 0.2,
@@ -60,6 +62,8 @@ interface StartScrollPosition extends Point {
 	localY: Coordinate;
 }
 
+
+
 export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	private readonly _chart: ChartWidget;
 	private _state: Pane | null;
@@ -81,6 +85,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 	private _startTrackPoint: Point | null = null;
 	private _exitTrackingModeOnNextTry: boolean = false;
 	private _initCrosshairPosition: Point | null = null;
+	private _startSketchPosition: Point | null = null
 
 	private _scrollXAnimation: KineticAnimation | null = null;
 
@@ -242,6 +247,9 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		this._onMouseEvent();
 		this._mouseTouchDownEvent();
 		this._setCrosshairPosition(event.localX, event.localY, event);
+		//enable only if drawing mode is on 
+		this._enableDrawing();
+		this._setStartSketchPosition( { x: event.localX, y: event.localY } as Point)
 	}
 
 	public mouseMoveEvent(event: MouseEventHandlerMouseEvent): void {
@@ -268,6 +276,7 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 	public pressedMouseMoveEvent(event: MouseEventHandlerMouseEvent): void {
 		this._onMouseEvent();
+		this._drawSketch(event.localX, event.localY);
 		this._pressedMouseTouchMoveEvent(event);
 		this._setCrosshairPosition(event.localX, event.localY, event);
 	}
@@ -277,7 +286,8 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 			return;
 		}
 		this._onMouseEvent();
-
+		this._disableDrawing();
+		this._setStartSketchPosition(null)
 		this._longTap = false;
 
 		this._endScroll(event);
@@ -526,6 +536,25 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 		}
 	}
 
+	private _sketch({ context: ctx, bitmapSize, horizontalPixelRatio, verticalPixelRatio  }: BitmapCoordinatesRenderingScope, data: SketchData | null): void {
+		if(data == null){
+			alert("Hello")
+			return;
+		}
+		ctx.lineCap = 'round';
+		const sx = Math.round(data.startX * horizontalPixelRatio);
+		const sy = Math.round(data.startY * verticalPixelRatio);
+		const ex = Math.round(data.endX * horizontalPixelRatio);
+		const ey = Math.round(data.endY * verticalPixelRatio);
+
+		if(sx>=0 && sx<bitmapSize.width && sy>=0 && sy<bitmapSize.height){
+			ctx.lineWidth = Math.floor(data.line.lineWidth * horizontalPixelRatio);
+			ctx.strokeStyle = data.line.color;
+			ctx.fillStyle = data.line.color;
+			drawLine(ctx, sx, sy, ex, ey);
+		}
+	}
+
 	private _drawGrid(target: CanvasRenderingTarget2D): void {
 		const state = ensureNotNull(this._state);
 		const paneView = state.grid().paneView();
@@ -544,6 +573,31 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 	private _drawCrosshair(target: CanvasRenderingTarget2D): void {
 		this._drawSourceImpl(target, sourcePaneViews, drawForeground, this._model().crosshairSource());
+	}
+
+	private _drawSketch(x: number, y: number): void {
+		this._canvasBinding.applySuggestedBitmapSize();
+		const target = tryCreateCanvasRenderingTarget2D(this._canvasBinding);
+		if (target !== null && this._startSketchPosition!== null) {
+			const startX: number = this._startSketchPosition.x
+			const startY: number = this._startSketchPosition.y
+			const sketchData = {
+				line: {
+					lineStyle: LineStyle.Solid,
+					lineWidth: 1,
+					color: "red",
+					visible: true
+				},
+				startX: startX,
+				startY: startY,
+				endX: x,
+				endY: y
+
+			} as SketchData
+			target.useBitmapCoordinateSpace((bitmapCoordinatesRenderingScope: BitmapCoordinatesRenderingScope) => {
+				this._sketch(bitmapCoordinatesRenderingScope, sketchData);
+			})
+		}
 	}
 
 	private _drawSources(target: CanvasRenderingTarget2D, paneViewsGetter: IPaneViewsGetter): void {
@@ -618,6 +672,18 @@ export class PaneWidget implements IDestroyable, MouseEventHandlers {
 
 	private _setCrosshairPosition(x: Coordinate, y: Coordinate, event: MouseEventHandlerEventBase): void {
 		this._model().setAndSaveCurrentPosition(this._correctXCoord(x), this._correctYCoord(y), event, ensureNotNull(this._state));
+	}
+
+	private _setStartSketchPosition(point: Point | null): void {
+		this._startSketchPosition = point
+	}
+
+	private _enableDrawing(): void {
+		this._state?.setDrawingEnabled(true)
+	}
+
+	private _disableDrawing(): void {
+		this._state?.setDrawingEnabled(false)
 	}
 
 	private _clearCrosshairPosition(): void {

@@ -43,6 +43,8 @@ export class Pane implements IDestroyable {
 	private _leftPriceScale: PriceScale;
 	private _rightPriceScale: PriceScale;
 
+	private _drawingEnabled: Boolean = false
+
 	public constructor(timeScale: TimeScale, model: ChartModel, initialPaneIndex: number = 0) {
 		this._timeScale = timeScale;
 		this._model = model;
@@ -117,6 +119,14 @@ export class Pane implements IDestroyable {
 			}
 		});
 		this._destroyed.fire();
+	}
+
+	public drawingEnabled(): Boolean {
+		return this._drawingEnabled;
+	}
+
+	public setDrawingEnabled(enabled: Boolean): void {
+		this._drawingEnabled = enabled
 	}
 
 	public stretchFactor(): number {
