@@ -120,6 +120,7 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 	private readonly _seriesMapReversed: Map<Series, SeriesApi<SeriesType>> = new Map();
 
 	private readonly _clickedDelegate: Delegate<MouseEventParams> = new Delegate();
+	private readonly _dblClickedDelegate: Delegate<MouseEventParams> = new Delegate();
 	private readonly _crosshairMovedDelegate: Delegate<MouseEventParams> = new Delegate();
 
 	private readonly _timeScaleApi: TimeScaleApi;
@@ -139,6 +140,14 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 			},
 			this
 		);
+		this._chartWidget.dblClicked().subscribe(
+			(paramSupplier: MouseEventParamsImplSupplier) => {
+				if (this._dblClickedDelegate.hasListeners()) {
+					this._dblClickedDelegate.fire(this._convertMouseParams(paramSupplier()));
+				}
+			},
+			this
+		);
 		this._chartWidget.crosshairMoved().subscribe(
 			(paramSupplier: MouseEventParamsImplSupplier) => {
 				if (this._crosshairMovedDelegate.hasListeners()) {
@@ -154,6 +163,7 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 
 	public remove(): void {
 		this._chartWidget.clicked().unsubscribeAll(this);
+		this._chartWidget.dblClicked().unsubscribeAll(this);
 		this._chartWidget.crosshairMoved().unsubscribeAll(this);
 
 		this._timeScaleApi.destroy();
@@ -163,6 +173,7 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		this._seriesMapReversed.clear();
 
 		this._clickedDelegate.destroy();
+		this._dblClickedDelegate.destroy();
 		this._crosshairMovedDelegate.destroy();
 		this._dataLayer.destroy();
 	}
@@ -253,6 +264,14 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		this._clickedDelegate.unsubscribe(handler);
 	}
 
+	public subscribeDblClick(handler: MouseEventHandler): void {
+		this._dblClickedDelegate.subscribe(handler);
+	}
+
+	public unsubscribeDblClick(handler: MouseEventHandler): void {
+		this._dblClickedDelegate.unsubscribe(handler);
+	}
+	
 	public subscribeCrosshairMove(handler: MouseEventHandler): void {
 		this._crosshairMovedDelegate.subscribe(handler);
 	}

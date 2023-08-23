@@ -129,5 +129,5 @@ ${noColor}`);
 }
 
 if (require.main === module) {
-	main();
+	// main();
 }
